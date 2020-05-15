@@ -81,7 +81,7 @@ successor of two; and so on.
 Write out `7` in longhand.
 
 ```
--- Your code goes here
+seven = suc (suc (suc (suc (suc (suc (suc zero))))))
 ```
 
 
@@ -430,7 +430,21 @@ other word for evidence, which we will use interchangeably, is _proof_.
 Compute `3 + 4`, writing out your reasoning as a chain of equations, using the equations for `+`.
 
 ```
--- Your code goes here
+_ : 3 + 4 ≡ 7
+_ =
+  begin
+    3 + 4
+  ≡⟨⟩
+    suc (2 + 4)              -- suc m + n = suc (m + n)
+  ≡⟨⟩
+    suc (suc (1 + 4))
+  ≡⟨⟩
+    suc (suc (suc (0 + 4)))  -- 0 + n = n
+  ≡⟨⟩
+    suc (suc (suc 4))
+  ≡⟨⟩
+    7
+  ∎
 ```
 
 
@@ -492,7 +506,21 @@ Compute `3 * 4`, writing out your reasoning as a chain of equations, using the e
 (You do not need to step through the evaluation of `+`.)
 
 ```
--- Your code goes here
+_ : 3 * 4 ≡ 12
+_ =
+  begin
+    3 * 4
+  ≡⟨⟩
+    4 + (2 * 4)              -- inductive case
+  ≡⟨⟩
+    4 + (4 + (1 * 4))        -- inductive case
+  ≡⟨⟩
+    4 + (4 + (4 + (0 * 4)))  -- inductive case
+  ≡⟨⟩
+    4 + (4 + (4 + 0))        -- base case
+  ≡⟨⟩
+    12
+  ∎
 ```
 
 
@@ -506,7 +534,12 @@ Define exponentiation, which is given by the following equations:
 Check that `3 ^ 4` is `81`.
 
 ```
--- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+m ^ zero    = suc zero
+m ^ (suc n) = m * (m ^ n)
+
+_ : 3 ^ 4 ≡ 81
+_ = refl
 ```
 
 
@@ -571,7 +604,33 @@ _ =
 Compute `5 ∸ 3` and `3 ∸ 5`, writing out your reasoning as a chain of equations.
 
 ```
--- Your code goes here
+_ : 5 ∸ 3 ≡ 2
+_ =
+  begin
+    5 ∸ 3
+  ≡⟨⟩
+    4 ∸ 2
+  ≡⟨⟩
+    3 ∸ 1
+  ≡⟨⟩
+    2 ∸ 0
+  ≡⟨⟩
+    2
+  ∎
+
+_ : 3 ∸ 5 ≡ 0
+_ =
+  begin
+    3 ∸ 5
+  ≡⟨⟩
+    2 ∸ 4
+  ≡⟨⟩
+    1 ∸ 3
+  ≡⟨⟩
+    0 ∸ 2
+  ≡⟨⟩
+    0
+  ∎
 ```
 
 
@@ -917,7 +976,101 @@ represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
 ```
--- Your code goes here
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (x O) = x I
+inc (x I) = (inc x) O
+
+-- inc 0 = 1
+_ : inc (⟨⟩ O) ≡ ⟨⟩ I
+_ =
+  begin
+    inc (⟨⟩ O)
+  ≡⟨⟩
+    ⟨⟩ I
+  ∎
+
+-- inc 1 = 10
+_ : inc (⟨⟩ I) ≡ ⟨⟩ I O
+_ =
+  begin
+    inc (⟨⟩ I)
+  ≡⟨⟩
+    (inc ⟨⟩) O
+  ≡⟨⟩
+    (⟨⟩ I) O
+  ≡⟨⟩
+    ⟨⟩ I O
+  ∎
+
+-- inc 10 = 11
+_ : inc (⟨⟩ I O) ≡ ⟨⟩ I I
+_ =
+  begin
+    inc (⟨⟩ I O)
+  ≡⟨⟩
+    inc ((⟨⟩ I) O)
+  ≡⟨⟩
+    (⟨⟩ I) I
+  ≡⟨⟩
+    ⟨⟩ I I
+  ∎
+
+-- inc 11 = 100
+_ : inc (⟨⟩ I I) ≡ ⟨⟩ I O O
+_ =
+  begin
+    inc (⟨⟩ I I)
+  ≡⟨⟩
+    inc ((⟨⟩ I) I)
+  ≡⟨⟩
+    (inc (⟨⟩ I)) O
+  ≡⟨⟩
+    ((inc ⟨⟩) O) O
+  ≡⟨⟩
+    ((⟨⟩ I) O) O
+  ≡⟨⟩
+    ⟨⟩ I O O
+  ∎
+
+to : ℕ → Bin
+to 0 = ⟨⟩ O
+to (suc n) = inc (to n)
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (x O) = 2 * from x
+from (x I) = 2 * from x + 1
+
+_ : to 0 ≡ ⟨⟩ O
+_ = refl
+
+_ : to 1 ≡ ⟨⟩ I
+_ = refl
+
+_ : to 2 ≡ ⟨⟩ I O
+_ = refl
+
+_ : to 3 ≡ ⟨⟩ I I
+_ = refl
+
+_ : to 4 ≡ ⟨⟩ I O O
+_ = refl
+
+_ : from (⟨⟩ O) ≡ 0
+_ = refl
+
+_ : from (⟨⟩ I) ≡ 1
+_ = refl
+
+_ : from (⟨⟩ I O) ≡ 2
+_ = refl
+
+_ : from (⟨⟩ I I) ≡ 3
+_ = refl
+
+_ : from (⟨⟩ I O O) ≡ 4
+_ = refl
 ```
 
 
