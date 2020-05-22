@@ -702,7 +702,70 @@ first four days using a finite story of creation, as
 [earlier]({{ site.baseurl }}/Naturals/#finite-creation).
 
 ```
--- Your code goes here
+-- Inference rules:
+--
+-- --------
+-- 0 : ℕ
+--
+--
+-- Addition:
+--
+-- n : ℕ
+-- ------------
+-- 0 + n = n
+--
+-- m + n = p
+-- -------------------
+-- succ m + n = succ p
+--
+--
+-- Associativity:
+--
+-- -------------------------------
+-- (0 + n) + p ≡ 0 + (n + p)
+--
+-- (m + n) + p ≡ m + (n + p)
+-- -------------------------
+-- (succ m + n) + p ≡ succ m + (n + p)
+--
+--
+-- "Creation" process:
+--
+-- 0 : ℕ
+--
+-- 1 : ℕ    0 + 0 = 0    (0 + 0) + 0 = 0 + (0 + 0)
+--
+-- 2 : ℕ    0 + 1 = 1    (0 + 0) + 1 = 0 + (0 + 1)
+--          1 + 0 = 1    (0 + 1) + 1 = 0 + (1 + 1)
+--                       (0 + 1) + 0 = 0 + (1 + 0)
+--                       (1 + 0) + 0 = 1 + (0 + 0)
+--
+-- 3 : ℕ    0 + 2 = 2    (0 + 0) + 2 = 0 + (0 + 2)
+--          1 + 1 = 2    (0 + 1) + 2 = 0 + (1 + 2)
+--          2 + 0 = 2    (0 + 2) + 2 = 0 + (2 + 2)
+--                       (0 + 2) + 0 = 0 + (2 + 0)
+--                       (0 + 2) + 1 = 0 + (2 + 1)
+--                       (1 + 0) + 1 = 1 + (0 + 1)
+--                       (1 + 1) + 1 = 1 + (1 + 1)
+--                       (1 + 1) + 0 = 1 + (1 + 0)
+--                       (2 + 0) + 0 = 2 + (0 + 0)
+--
+-- 4 : ℕ    0 + 3 = 3    (0 + 0) + 3 = 0 + (0 + 3)
+--          1 + 2 = 3    (0 + 1) + 3 = 0 + (1 + 3)
+--          2 + 1 = 3    (0 + 2) + 3 = 0 + (2 + 3)
+--          3 + 0 = 3    (0 + 3) + 3 = 0 + (3 + 3)
+--                       (0 + 3) + 0 = 0 + (3 + 0)
+--                       (0 + 3) + 1 = 0 + (3 + 1)
+--                       (0 + 3) + 2 = 0 + (3 + 2)
+--                       (1 + 0) + 2 = 1 + (0 + 2)
+--                       (1 + 1) + 2 = 1 + (1 + 2)
+--                       (1 + 2) + 2 = 1 + (2 + 2)
+--                       (1 + 2) + 0 = 1 + (2 + 0)
+--                       (1 + 2) + 1 = 1 + (2 + 1)
+--                       (2 + 0) + 1 = 2 + (0 + 1)
+--                       (2 + 1) + 1 = 2 + (1 + 1)
+--                       (2 + 1) + 0 = 2 + (1 + 0)
+--                       (3 + 0) + 0 = 3 + (0 + 0)
 ```
 
 ## Associativity with rewrite
@@ -868,7 +931,17 @@ just apply the previous results which show addition
 is associative and commutative.
 
 ```
--- Your code goes here
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p =
+  begin
+    m + (n + p)
+  ≡⟨ sym (+-assoc m n p) ⟩
+    (m + n) + p
+  ≡⟨ cong (_+ p) (+-comm m n) ⟩
+    (n + m) + p
+  ≡⟨ +-assoc n m p ⟩
+    n + (m + p)
+  ∎
 ```
 
 
@@ -881,7 +954,27 @@ Show multiplication distributes over addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p =
+  begin
+    (suc m + n) * p
+  ≡⟨⟩
+    suc (m + n) * p
+  ≡⟨⟩
+    p + (m + n) * p
+  ≡⟨ cong (p +_) (*-distrib-+ m n p) ⟩
+    p + (m * p + n * p)
+  ≡⟨ sym (+-assoc p (m * p) (n * p)) ⟩
+    (p + m * p) + n * p
+  ≡⟨⟩
+    suc m * p + n * p
+  ∎
+
+-- Using rewrite:
+*-distrib-+′ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+′ zero n p = refl
+*-distrib-+′ (suc m) n p rewrite *-distrib-+ m n p = sym (+-assoc p (m * p) (n * p))
 ```
 
 
@@ -894,7 +987,32 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p =
+  begin
+    (suc m * n) * p
+  ≡⟨⟩
+    (n + m * n) * p
+  ≡⟨ *-distrib-+ n (m * n) p ⟩
+    n * p + (m * n) * p
+  ≡⟨ cong ((n * p) +_) (*-assoc m n p) ⟩
+    n * p + m * (n * p)
+  ≡⟨⟩
+    suc m * (n * p)
+  ∎
+
+-- Using rewrite:
+*-assoc′ : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc′ zero n p = refl
+*-assoc′ (suc m) n p rewrite *-assoc′ m n p =
+  begin
+    (n + m * n) * p
+  ≡⟨ *-distrib-+ n (m * n) p ⟩
+    n * p +  (m * n) * p
+  ≡⟨ cong ((n * p) +_) (*-assoc m n p) ⟩
+    n * p + m * (n * p)
+  ∎
 ```
 
 
@@ -908,7 +1026,101 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```
--- Your code goes here
+-- First lemma
+
+*-zeroʳ : ∀ (m : ℕ) → m * zero ≡ zero
+*-zeroʳ zero = refl
+*-zeroʳ (suc m) =
+  begin
+    suc m * zero
+  ≡⟨⟩
+    zero + m * zero
+  ≡⟨ cong (zero +_) (*-zeroʳ m) ⟩
+    zero + zero
+  ≡⟨⟩
+    zero
+  ∎
+
+-- trivial using 'rewrite'
+*-zeroʳ′ : ∀ (m : ℕ) → m * zero ≡ zero
+*-zeroʳ′ zero = refl
+*-zeroʳ′ (suc m) rewrite (*-zeroʳ m) = refl
+
+
+-- Second lemma
+
+*-suc : ∀ (m n : ℕ) → m * suc n ≡ m + m * n
+*-suc zero n = refl
+*-suc (suc m) n =
+  begin
+    suc m * suc n
+  ≡⟨⟩
+    suc n + m * suc n
+  ≡⟨ cong (suc n +_) (*-suc m n) ⟩
+    suc n + (m + m * n)
+  ≡⟨ sym (+-assoc (suc n) m (m * n)) ⟩
+    suc n + m + m * n
+  ≡⟨⟩
+    suc (n + m) + m * n
+  ≡⟨ cong (_+ m * n) (sym (+-suc n m)) ⟩
+    n + suc m + m * n
+  ≡⟨ cong (_+ m * n) (+-comm n (suc m)) ⟩
+    suc m + n + m * n
+  ≡⟨ +-assoc (suc m) n (m * n) ⟩
+    suc m + (n + m * n)
+  ≡⟨⟩
+    suc m + suc m * n
+  ∎
+
+-- Slightly shorter with 'rewrite'
+*-suc′ : ∀ (m n : ℕ) → m * suc n ≡ m + m * n
+*-suc′ zero n = refl
+*-suc′ (suc m) n rewrite (*-suc′ m n) =
+  begin
+    suc n + (m + m * n)
+  ≡⟨ sym (+-assoc (suc n) m (m * n)) ⟩
+    suc n + m + m * n
+  ≡⟨ cong (_+ m * n) (+-comm (suc n) m) ⟩
+    m + suc n + m * n
+  ≡⟨ cong (_+ m * n) (+-suc m n) ⟩
+    suc (m + n) + m * n
+  ≡⟨⟩
+    (suc m + n) + m * n
+  ≡⟨ +-assoc (suc m) n (m * n) ⟩
+    suc m + (n + m * n)
+  ∎
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm zero n =
+  begin
+    zero * n
+  ≡⟨⟩
+    zero
+  ≡⟨ sym (*-zeroʳ n) ⟩
+    n * zero
+  ∎
+*-comm (suc m) n =
+  begin
+    suc m * n
+  ≡⟨⟩
+    n + m * n
+  ≡⟨ cong (n +_) (*-comm m n) ⟩
+    n + n * m
+  ≡⟨ sym (*-suc n m) ⟩
+    n * suc m
+  ∎
+
+-- Again with 'rewrite'
+*-comm′ : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm′ zero n =
+  begin
+    zero * n
+  ≡⟨⟩
+    zero
+  ≡⟨ sym (*-zeroʳ n) ⟩
+    n * zero
+  ∎
+*-comm′ (suc m) n rewrite (*-comm′ m n) = sym (*-suc n m)
 ```
 
 
@@ -921,7 +1133,10 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 ```
--- Your code goes here
+-- Induction not required
+0∸n≡0 : ∀ (n : ℕ) → zero ∸ n ≡ zero
+0∸n≡0 zero = refl
+0∸n≡0 (suc n) = refl
 ```
 
 
@@ -934,7 +1149,27 @@ Show that monus associates with addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc zero n p rewrite 0∸n≡0 n | 0∸n≡0 p | 0∸n≡0 (n + p) = refl
+∸-+-assoc (suc m) zero p = refl
+∸-+-assoc (suc m) (suc n) p =
+  begin
+    suc m ∸ suc n ∸ p
+  ≡⟨⟩
+    m ∸ n ∸ p
+  ≡⟨ ∸-+-assoc m n p ⟩
+    m ∸ (n + p)
+  ≡⟨⟩
+    suc m ∸ suc (n + p)
+  ≡⟨⟩
+    suc m ∸ (suc n + p)
+  ∎
+
+-- or, rewriting the last case
+∸-+-assoc′ : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc′ zero n p rewrite 0∸n≡0 n | 0∸n≡0 p | 0∸n≡0 (n + p) = refl
+∸-+-assoc′ (suc m) zero p = refl
+∸-+-assoc′ (suc m) (suc n) p rewrite ∸-+-assoc′ m n p = refl
 ```
 
 
