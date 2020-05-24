@@ -234,13 +234,16 @@ partial order but not a total order.
 Give an example of a preorder that is not a partial order.
 
 ```
--- Your code goes here
+-- e.g. "is reachable from" on a directed graph:
+-- A is reachable from A (reflexivity)
+-- C is reachable from B and B is reachable from A ⇒ C is reachable from A (transitivity)
+-- A is reachable from B and B is reachable from A does not imply A ≡ B
 ```
 
 Give an example of a partial order that is not a total order.
 
 ```
--- Your code goes here
+-- e.g. stack of number lines: { (x, n) | x ∈ ℝ, n ∈ ℕ } with (x, m) ≤ (x′, m) ≡ x ≤ x′
 ```
 
 ## Reflexivity
@@ -264,6 +267,12 @@ n`, and applying `s≤s` to that yields a proof of `suc n ≤ suc n`.
 It is a good exercise to prove reflexivity interactively in Emacs,
 using holes and the `C-c C-c`, `C-c C-,`, and `C-c C-r` commands.
 
+```
+-- same as above, done interactively as suggested
+≤-refl′ : ∀ { n : ℕ } → n ≤ n
+≤-refl′ {zero} = z≤n
+≤-refl′ {suc n} = s≤s ≤-refl′
+```
 
 ## Transitivity
 
@@ -318,6 +327,13 @@ out to be immensely valuable, and one that we use often.
 Again, it is a good exercise to prove transitivity interactively in Emacs,
 using holes and the `C-c C-c`, `C-c C-,`, and `C-c C-r` commands.
 
+```
+-- proving interactively...
+≤-trans′′ : ∀ {m n p : ℕ} → m ≤ n → n ≤ p → m ≤ p
+≤-trans′′ z≤n _ = z≤n
+≤-trans′′ (s≤s m≤n) (s≤s n≤p) = s≤s (≤-trans′′ m≤n n≤p)
+```
+
 
 ## Anti-symmetry
 
@@ -349,11 +365,23 @@ follows by congruence.
 
 #### Exercise `≤-antisym-cases` (practice) {#leq-antisym-cases}
 
+```
+-- reproducing above proof interactively
+≤-antisym′ : ∀ { m n : ℕ }
+  → m ≤ n
+  → n ≤ m
+  -------
+  → m ≡ n
+≤-antisym′ z≤n z≤n = refl
+≤-antisym′ (s≤s m≤n) (s≤s n≤m) = cong suc (≤-antisym′ m≤n n≤m)
+```
+
 The above proof omits cases where one argument is `z≤n` and one
 argument is `s≤s`.  Why is it ok to omit them?
 
 ```
--- Your code goes here
+-- If m or n is zero, there is no instance of the form s≤s m≤n
+-- (because zero is not the successor of any n ∈ ℕ).
 ```
 
 
@@ -543,7 +571,28 @@ transitivity proves `m + p ≤ n + q`, as was to be shown.
 Show that multiplication is monotonic with regard to inequality.
 
 ```
--- Your code goes here
+open import Data.Nat using (_*_)
+open import Data.Nat.Properties using (*-zeroʳ; *-comm)
+
+*-mono-≤ʳ : ∀ (n p q : ℕ)
+  → p ≤ q
+  ---------------
+  → n * p ≤ n * q
+*-mono-≤ʳ zero p q p≤q = z≤n
+*-mono-≤ʳ (suc n) p q p≤q = +-mono-≤ p q (n * p) (n * q) p≤q (*-mono-≤ʳ n p q p≤q)
+
+*-mono-≤ˡ : ∀ (m n p : ℕ)
+  → m ≤ n
+  ---------------
+  → m * p ≤ n * p
+*-mono-≤ˡ m n zero _ rewrite *-zeroʳ m | *-zeroʳ n = z≤n
+*-mono-≤ˡ m n p m≤n rewrite *-comm m p | *-comm n p = *-mono-≤ʳ p m n m≤n
+
+*-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+  → m * p ≤ n * q
+*-mono-≤ m n p q m≤n p≤q = ≤-trans (*-mono-≤ʳ m p q p≤q) (*-mono-≤ˡ m n q m≤n)
 ```
 
 
@@ -590,7 +639,13 @@ exploiting the corresponding properties of inequality.
 Show that strict inequality is transitive.
 
 ```
--- Your code goes here
+<-trans : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+  -------
+  → m < p
+<-trans {zero} {suc n} {suc p} m<n n<p = z<s
+<-trans {suc m} {suc n} {suc p} (s<s m<n) (s<s n<p) = s<s (<-trans {m} {n} {p} m<n n<p)
 ```
 
 #### Exercise `trichotomy` (practice) {#trichotomy}
@@ -608,7 +663,33 @@ similar to that used for totality.
 [negation]({{ site.baseurl }}/Negation/).)
 
 ```
--- Your code goes here
+data Trichotomy (m n : ℕ) : Set where
+
+  tri-forward :
+      m < n
+      --------------
+    → Trichotomy m n
+
+  tri-equiv :
+      m ≡ n
+      --------------
+    → Trichotomy m n
+
+  tri-flipped :
+      n < m
+      --------------
+    → Trichotomy m n
+
+
+<-trichotomy : ∀ (m n : ℕ) → Trichotomy m n
+<-trichotomy zero zero = tri-equiv (refl {x = 0})
+<-trichotomy zero (suc n) = tri-forward z<s
+<-trichotomy (suc m) zero = tri-flipped z<s
+<-trichotomy (suc m) (suc n)
+    with <-trichotomy m n
+... | tri-forward m<n = tri-forward (s<s m<n)
+... | tri-equiv m≡n = tri-equiv (cong suc m≡n)
+... | tri-flipped n<m = tri-flipped (s<s n<m)
 ```
 
 #### Exercise `+-mono-<` (practice) {#plus-mono-less}
@@ -617,7 +698,28 @@ Show that addition is monotonic with respect to strict inequality.
 As with inequality, some additional definitions may be required.
 
 ```
--- Your code goes here
++-mono-<ʳ : ∀ (m p q : ℕ)
+  → p < q
+  ---------------
+  → m + p < m + q
++-mono-<ʳ zero p q p<q = p<q
++-mono-<ʳ (suc m) p q p<q = s<s (+-mono-<ʳ m p q p<q)
+
++-mono-<ˡ : ∀ (m n p : ℕ)
+  → m < n
+  ---------------
+  → m + p < n + p
++-mono-<ˡ m n p m<n rewrite +-comm n p | +-comm m p = +-mono-<ʳ p m n m<n
+
++-mono-< : ∀ (m n p q : ℕ)
+  → m < n
+  → p < q
+  ---------------
+  → m + p < n + q
++-mono-< m n p q m<n p<q =
+  <-trans
+  (+-mono-<ʳ m p q p<q)
+  (+-mono-<ˡ m n q m<n)
 ```
 
 #### Exercise `≤-iff-<` (recommended) {#leq-iff-less}
@@ -625,7 +727,19 @@ As with inequality, some additional definitions may be required.
 Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```
--- Your code goes here
+<-if-≤ : ∀ {m n : ℕ}
+  → suc m ≤ n
+  -----------
+  → m < n
+<-if-≤ {zero} {suc n} _ = z<s
+<-if-≤ {suc m} {suc n} (s≤s sm≤n) = s<s (<-if-≤ sm≤n)
+
+≤-if-< : ∀ {m n : ℕ}
+  → m < n
+  -----------
+  → suc m ≤ n
+≤-if-< {zero} {suc n} _ = s≤s z≤n
+≤-if-< {suc m} {suc n} (s<s m<n) = s≤s (≤-if-< m<n)
 ```
 
 #### Exercise `<-trans-revisited` (practice) {#less-trans-revisited}
@@ -635,9 +749,17 @@ using the relation between strict inequality and inequality and
 the fact that inequality is transitive.
 
 ```
--- Your code goes here
-```
+≤-suc : ∀ {n : ℕ} → n ≤ suc n
+≤-suc {zero} = z≤n
+≤-suc {suc n} = s≤s ≤-suc
 
+<-trans-revisited : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+  -------
+  → m < p
+<-trans-revisited m<n n<p = <-if-≤ (≤-trans (≤-trans (≤-if-< m<n) ≤-suc) (≤-if-< n<p))
+```
 
 ## Even and odd
 
@@ -742,7 +864,14 @@ successor of the sum of two even numbers, which is even.
 Show that the sum of two odd numbers is even.
 
 ```
--- Your code goes here
+o+o≡e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+  --------------
+  → even (n + m)
+
+o+o≡e {suc m} {suc n} (suc em) (suc en) rewrite +-comm n (suc m) with e+e≡e em en
+... | em+n = suc (suc em+n)
 ```
 
 #### Exercise `Bin-predicates` (stretch) {#Bin-predicates}
@@ -795,7 +924,70 @@ properties of `One`. Also, you may need to prove that
 if `One b` then `1` is less or equal to the result of `from b`.)
 
 ```
--- Your code goes here
+-- Definitions from Naturals exercises
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (x O) = x I
+inc (x I) = (inc x) O
+
+to : ℕ → Bin
+to 0 = ⟨⟩ O
+to (suc n) = inc (to n)
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (x O) = 2 * from x
+from (x I) = 2 * from x + 1
+```
+
+```
+data Can : Bin → Set
+data One : Bin → Set
+
+-- a canonical bitstring is zero or a bitstring with a leading 1
+data Can where
+  zero : Can (⟨⟩ O)
+  can : ∀ {b : Bin} → One b → Can b
+
+data One where
+  one : One (⟨⟩ I)
+  _O : {b : Bin} → One b → One (b O)
+  _I : {b : Bin} → One b → One (b I)
+
+inc-one : ∀ {b : Bin}
+  → One b
+  -------------
+  → One (inc b)
+inc-one one = one O
+inc-one (ob O) = ob I
+inc-one (ob I) = inc-one ob O
+
+-- First proof
+inc-can : ∀ {b : Bin}
+  → Can b
+  -------------
+  → Can (inc b)
+inc-can zero = can one
+inc-can (can ob) = can (inc-one ob)
+
+-- Second proof
+to-can : ∀ {n : ℕ} → Can (to n)
+to-can {zero} = zero
+to-can {suc n} = inc-can (to-can {n})
+
+-- Third proof
+to-from-id : ∀ {b : Bin}
+  → Can b
+  -------------------
+  → to (from b) ≡ b
+
+-- TODO: finish
+to-from-id cb = {!!}
 ```
 
 ## Standard library
