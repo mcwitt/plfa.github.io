@@ -354,7 +354,133 @@ it to write out an alternative proof that addition is monotonic with
 regard to inequality.  Rewrite all of `+-monoˡ-≤`, `+-monoʳ-≤`, and `+-mono-≤`.
 
 ```
--- Your code goes here
+-- reproduce definition to avoid imports
+infix 4 _≤_
+data _≤_ : ℕ → ℕ → Set where
+
+  z≤n : ∀ {n : ℕ}
+      --------
+    → zero ≤ n
+
+  s≤s : ∀ {m n : ℕ}
+    → m ≤ n
+      -------------
+    → suc m ≤ suc n
+
+-- postulate properties to avoid imports
+postulate
+  ≤-refl : ∀ {x : ℕ}
+      -----
+    → x ≤ x
+
+  ≤-trans : ∀ {m n p : ℕ}
+    → m ≤ n
+    → n ≤ p
+      -----
+    → m ≤ p
+
+  +-identityʳ : ∀ {m : ℕ}
+      ------------
+    → m + zero ≡ m
+
+  ≤-if-≡ : ∀ {m n : ℕ}
+    → m ≡ n
+      -----
+    → m ≤ n
+```
+
+```
+module ≤-Reasoning where
+
+  infix  1 begin-≤_
+  infixr 2 _≤⟨⟩_ _≤⟨_⟩_
+  infix  3 _∎-≤
+
+  begin-≤_ : ∀ {x y : ℕ}
+    → x ≤ y
+    -------
+    → x ≤ y
+  begin-≤ x≤y = x≤y
+
+  _≤⟨⟩_ : ∀ (x : ℕ) {y : ℕ}
+    → x ≤ y
+    -------
+    → x ≤ y
+  _ ≤⟨⟩ x≤y = x≤y
+
+  _≤⟨_⟩_ : ∀ (x : ℕ) {y z : ℕ}
+    → x ≤ y
+    → y ≤ z
+    -------
+    → x ≤ z
+  x ≤⟨ x≤y ⟩ y≤z = ≤-trans x≤y y≤z
+
+  _∎-≤ : ∀ (x : ℕ)
+    -------
+    → x ≤ x
+  x ∎-≤ = ≤-refl
+
+open ≤-Reasoning
+
++-monoʳ-≤ : ∀ { m p q : ℕ }
+  → p ≤ q
+  ---------------
+  → m + p ≤ m + q
++-monoʳ-≤ {zero} p≤q = p≤q
++-monoʳ-≤ {suc m} {p} {q} p≤q =
+  begin-≤
+    suc m + p
+  ≤⟨⟩
+    suc (m + p)
+  ≤⟨ s≤s (+-monoʳ-≤ {m} p≤q) ⟩
+    suc (m + q)
+  ≤⟨⟩
+    suc m + q
+  ∎-≤
+
++-monoˡ-≤ : ∀ { m n p : ℕ }
+  → m ≤ n
+  ---------------
+  → m + p ≤ n + p
++-monoˡ-≤ {zero} {n} {p} z≤n =
+  begin-≤
+    p
+  ≤⟨ ≤-if-≡ (sym (+-identityʳ)) ⟩
+    p + zero
+  ≤⟨ +-monoʳ-≤ z≤n ⟩
+    p + n
+  ≤⟨ ≤-if-≡ (+-comm p n) ⟩
+    n + p
+  ∎-≤
+
++-monoˡ-≤ {suc m} {suc n} {p} (s≤s m≤n) =
+  begin-≤
+    suc m + p
+  ≤⟨⟩
+    suc (m + p)
+  ≤⟨ ≤-if-≡ (cong suc (+-comm m p)) ⟩
+    suc (p + m)
+  ≤⟨ s≤s (+-monoʳ-≤ m≤n) ⟩
+    suc (p + n)
+  ≤⟨ ≤-if-≡ (cong suc (+-comm p n)) ⟩
+    suc (n + p)
+  ≤⟨⟩
+    suc n + p
+  ∎-≤
+
++-mono-≤ : ∀ { m n p q : ℕ }
+  → m ≤ n
+  → p ≤ q
+  ---------------
+  → m + p ≤ n + q
++-mono-≤ {m} {n} {p} {q} m≤n p≤q =
+  begin-≤
+    m + p
+  ≤⟨ +-monoˡ-≤ m≤n ⟩
+    n + p
+  ≤⟨ +-monoʳ-≤ p≤q ⟩
+    n + q
+  ∎-≤
 ```
 
 
