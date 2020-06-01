@@ -440,15 +440,16 @@ open ≲-Reasoning
 
 Show that every isomorphism implies an embedding.
 ```
-postulate
-  ≃-implies-≲ : ∀ {A B : Set}
-    → A ≃ B
-      -----
-    → A ≲ B
-```
-
-```
--- Your code goes here
+≃-implies-≲ : ∀ {A B : Set}
+  → A ≃ B
+    -----
+  → A ≲ B
+≃-implies-≲ A≃B =
+  record
+    { to = to A≃B
+    ; from = from A≃B
+    ; from∘to = from∘to A≃B
+    }
 ```
 
 #### Exercise `_⇔_` (practice) {#iff}
@@ -463,7 +464,37 @@ record _⇔_ (A B : Set) : Set where
 Show that equivalence is reflexive, symmetric, and transitive.
 
 ```
--- Your code goes here
+open _⇔_
+
+⇔-refl : ∀ {A : Set}
+    -----
+  → A ⇔ A
+⇔-refl =
+  record
+    { to = λ x → x
+    ; from = λ x → x
+    }
+
+⇔-sym : ∀ {A B : Set}
+  → A ⇔ B
+    -----
+  → B ⇔ A
+⇔-sym A⇔B =
+  record
+    { to   = from A⇔B
+    ; from = to   A⇔B
+    }
+
+⇔-trans : ∀ {A B C : Set}
+  → A ⇔ B
+  → B ⇔ C
+    ------
+  → A ⇔ C
+⇔-trans A⇔B B⇔C =
+  record
+    { to   = to B⇔C ∘ to A⇔B
+    ; from = from A⇔B ∘ from B⇔C
+    }
 ```
 
 #### Exercise `Bin-embedding` (stretch) {#Bin-embedding}
@@ -483,7 +514,24 @@ which satisfy the following property:
 
 Using the above, establish that there is an embedding of `ℕ` into `Bin`.
 ```
--- Your code goes here
+-- reproducing earlier definition
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+postulate
+  to-bin : ℕ → Bin
+  from-bin : Bin → ℕ
+  from∘to-bin : ∀ (m : ℕ) → from-bin (to-bin m) ≡ m
+
+ℕ≲Bin : ℕ ≲ Bin
+ℕ≲Bin =
+  record
+  { to = to-bin
+  ; from = from-bin
+  ; from∘to = from∘to-bin
+  }
 ```
 
 Why do `to` and `from` not form an isomorphism?
