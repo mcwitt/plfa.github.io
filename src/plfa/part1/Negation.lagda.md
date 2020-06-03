@@ -193,7 +193,22 @@ Using negation, show that
 is irreflexive, that is, `n < n` holds for no `n`.
 
 ```
--- Your code goes here
+-- reproducing definition from §Relations
+infix 4 _<_
+
+data _<_ : ℕ → ℕ → Set where
+
+  z<s : ∀ {n : ℕ}
+      ------------
+    → zero < suc n
+
+  s<s : ∀ {m n : ℕ}
+    → m < n
+      -------------
+    → suc m < suc n
+
+<-irreflexive : ∀ {n : ℕ} → ¬ n < n
+<-irreflexive {suc m} (s<s m<m) = <-irreflexive m<m
 ```
 
 
@@ -211,7 +226,53 @@ Here "exactly one" means that not only one of the three must hold,
 but that when one holds the negation of the other two must also hold.
 
 ```
--- Your code goes here
+data Trichotomy (m n : ℕ) : Set where
+
+  tri-forward :
+      m < n
+    → ¬ m ≡ n
+    → ¬ n < m
+      --------------
+    → Trichotomy m n
+
+  tri-equiv :
+      ¬ m < n
+    → m ≡ n
+    → ¬ n < m
+      --------------
+    → Trichotomy m n
+
+  tri-flipped :
+      ¬ m < n
+    → ¬ m ≡ n
+    → n < m
+      --------------
+    → Trichotomy m n
+
+
+≡-if-suc-≡ : ∀ {m n : ℕ}
+  → suc m ≡ suc n
+    -------------
+  → m ≡ n
+≡-if-suc-≡ refl = refl
+
+open import Relation.Binary.PropositionalEquality using (cong)
+
+trichotomy : ∀ {m n : ℕ} → Trichotomy m n
+trichotomy {zero} {zero} = tri-equiv <-irreflexive refl <-irreflexive
+trichotomy {zero} {suc n} = tri-forward z<s (λ()) (λ())
+trichotomy {suc m} {zero} = tri-flipped (λ()) (λ()) z<s
+trichotomy {suc m} {suc n}
+    with trichotomy
+... | tri-forward  m<n ¬m≡n ¬n<m = tri-forward (s<s m<n)
+                                               (λ sm≡sn → ¬m≡n (≡-if-suc-≡ sm≡sn))
+                                               (λ{ (s<s n<m) → ¬n<m n<m })
+... | tri-equiv   ¬m<n  m≡n ¬n<m = tri-equiv   (λ{ (s<s m<n) → ¬m<n m<n })
+                                               (cong suc m≡n)
+                                               (λ{ (s<s n<m) → ¬n<m n<m})
+... | tri-flipped ¬m<n ¬m≡n  n<m = tri-flipped (λ{ (s<s m<n) → ¬m<n m<n})
+                                               (λ sm≡sn → ¬m≡n (≡-if-suc-≡ sm≡sn))
+                                               (s<s n<m)
 ```
 
 #### Exercise `⊎-dual-×` (recommended)
@@ -224,7 +285,16 @@ version of De Morgan's Law.
 This result is an easy consequence of something we've proved previously.
 
 ```
--- Your code goes here
+-- proved in §Connectives
+postulate
+  →-distrib-⊎ : ∀ {A B C : Set}
+      ---------------------------------
+    → (A ⊎ B → C) ≃ ((A → C) × (B → C))
+
+⊎-dual-× : ∀ {A B : Set}
+    -------------------------
+  → ¬ (A ⊎ B) ≃ (¬ A) × (¬ B)
+⊎-dual-× = →-distrib-⊎
 ```
 
 
@@ -234,6 +304,19 @@ Do we also have the following?
 
 If so, prove; if not, can you give a relation weaker than
 isomorphism that relates the two sides?
+
+```
+×-dual-⊎ : ∀ {A B : Set}
+    -------------------------
+  → ¬ (A × B) ≃ (¬ A) ⊎ (¬ B)
+×-dual-⊎ =
+  record
+  { to = {!!}
+  ; from = {!!}
+  ; from∘to = {!!}
+  ; to∘from = {!!}
+  }
+```
 
 
 ## Intuitive and Classical logic
