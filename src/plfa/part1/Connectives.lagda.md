@@ -238,7 +238,28 @@ Show that `A ⇔ B` as defined [earlier]({{ site.baseurl }}/Isomorphism/#iff)
 is isomorphic to `(A → B) × (B → A)`.
 
 ```
--- Your code goes here
+-- reproducing definition
+record _⇔_ (A B : Set) : Set where
+  field
+    to   : A → B
+    from : B → A
+
+open _⇔_
+
+⇔≃× : ∀ {A B : Set} → A ⇔ B ≃ (A → B) × (B → A)
+⇔≃× =
+  record
+  { to = λ A⇔B → ⟨ to A⇔B , from A⇔B ⟩
+  ; from = λ
+    {⟨ A→B , B→A ⟩ →
+      record
+      { to = A→B
+      ; from = B→A
+      }
+    }
+  ; from∘to = λ { A⇔B → refl }
+  ; to∘from = λ {⟨ A→B , B→A ⟩ → refl}
+  }
 ```
 
 
@@ -428,7 +449,23 @@ commutative and associative _up to isomorphism_.
 Show sum is commutative up to isomorphism.
 
 ```
--- Your code goes here
+⊎-comm : ∀ {A B : Set}
+    -------------
+  → A ⊎ B ≃ B ⊎ A
+⊎-comm =
+  record
+  { to   = λ{ (inj₁ x) → inj₂ x
+            ; (inj₂ y) → inj₁ y}
+  ; from = λ{ (inj₁ y) → inj₂ y
+            ; (inj₂ x) → inj₁ x
+            }
+  ; from∘to = λ{ (inj₁ x) → refl
+               ; (inj₂ y) → refl
+               }
+  ; to∘from = λ{ (inj₁ y) → refl
+               ; (inj₂ x) → refl
+               }
+  }
 ```
 
 #### Exercise `⊎-assoc` (practice)
@@ -436,7 +473,28 @@ Show sum is commutative up to isomorphism.
 Show sum is associative up to isomorphism.
 
 ```
--- Your code goes here
+⊎-assoc : ∀ {A B C : Set}
+    ------------------------
+  → A ⊎ (B ⊎ C) ≃ (A ⊎ B) ⊎ C
+⊎-assoc =
+  record
+  { to   = λ{ (inj₁ x)        → inj₁ (inj₁ x)
+            ; (inj₂ (inj₁ y)) → inj₁ (inj₂ y)
+            ; (inj₂ (inj₂ z)) → inj₂ z
+            }
+  ; from = λ{ (inj₁ (inj₁ x)) → inj₁ x
+            ; (inj₁ (inj₂ y)) → inj₂ (inj₁ y)
+            ; (inj₂ z)        → inj₂ (inj₂ z)
+            }
+  ; from∘to = λ{ (inj₁ x)        → refl
+               ; (inj₂ (inj₁ y)) → refl
+               ; (inj₂ (inj₂ z)) → refl
+               }
+  ; to∘from = λ{ (inj₁ (inj₁ x)) → refl
+               ; (inj₁ (inj₂ y)) → refl
+               ; (inj₂ z) → refl
+               }
+  }
 ```
 
 ## False is empty
@@ -499,7 +557,20 @@ is the identity of sums _up to isomorphism_.
 Show empty is the left identity of sums up to isomorphism.
 
 ```
--- Your code goes here
+⊥-identityˡ : ∀ {A : Set}
+    ---------
+  → ⊥ ⊎ A ≃ A
+⊥-identityˡ =
+  record
+    { to = λ{ (inj₁ ())
+            ; (inj₂ x) → x
+            }
+    ; from = λ x → inj₂ x
+    ; from∘to = λ{ (inj₁ ())
+                 ; (inj₂ x) → refl
+                 }
+    ; to∘from = λ _ → refl
+    }
 ```
 
 #### Exercise `⊥-identityʳ` (practice)
@@ -507,7 +578,20 @@ Show empty is the left identity of sums up to isomorphism.
 Show empty is the right identity of sums up to isomorphism.
 
 ```
--- Your code goes here
+⊥-identityʳ : ∀ {A : Set}
+    ---------
+  → A ⊎ ⊥ ≃ A
+⊥-identityʳ =
+  record
+    { to = λ{ (inj₁ x) → x
+            ; (inj₂ ())
+            }
+    ; from = λ x → inj₁ x
+    ; from∘to = λ{ (inj₁ x) → refl
+                 ; (inj₂ ())
+                 }
+    ; to∘from = λ _ → refl
+    }
 ```
 
 ## Implication is function {#implication}
@@ -731,13 +815,15 @@ one of these laws is "more true" than the other.
 
 Show that the following property holds:
 ```
-postulate
-  ⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+⊎-weak-× : ∀ {A B C : Set} → (A ⊎ B) × C → A ⊎ (B × C)
+⊎-weak-× ⟨ inj₁ x , z ⟩ = inj₁ x
+⊎-weak-× ⟨ inj₂ y , z ⟩ = inj₂ ⟨ y , z ⟩
 ```
 This is called a _weak distributive law_. Give the corresponding
 distributive law, and explain how it relates to the weak version.
 
 ```
+-- TODO
 -- Your code goes here
 ```
 
@@ -746,13 +832,14 @@ distributive law, and explain how it relates to the weak version.
 
 Show that a disjunct of conjuncts implies a conjunct of disjuncts:
 ```
-postulate
-  ⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ : ∀ {A B C D : Set} → (A × B) ⊎ (C × D) → (A ⊎ C) × (B ⊎ D)
+⊎×-implies-×⊎ (inj₁ ⟨ x , y ⟩) = ⟨ inj₁ x , inj₁ y ⟩
+⊎×-implies-×⊎ (inj₂ ⟨ z , w ⟩) = ⟨ inj₂ z , inj₂ w ⟩
 ```
 Does the converse hold? If so, prove; if not, give a counterexample.
 
 ```
--- Your code goes here
+-- Converse does not hold, e.g. ABCD = TFFT
 ```
 
 
