@@ -306,16 +306,25 @@ If so, prove; if not, can you give a relation weaker than
 isomorphism that relates the two sides?
 
 ```
-×-dual-⊎ : ∀ {A B : Set}
+open import plfa.part1.Isomorphism using (_≲_)
+open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
+
+×-dual-⊎-from : ∀ {A B : Set}
     -------------------------
-  → ¬ (A × B) ≃ (¬ A) ⊎ (¬ B)
-×-dual-⊎ =
-  record
-  { to = {!!}
-  ; from = {!!}
-  ; from∘to = {!!}
-  ; to∘from = {!!}
-  }
+  → (¬ A) ⊎ (¬ B) → ¬ (A × B)
+×-dual-⊎-from (inj₁ ¬x) ⟨ x , _ ⟩ = ¬x x
+×-dual-⊎-from (inj₂ ¬y) ⟨ _ , y ⟩ = ¬y y
+
+-- This is half of the de Morgan law.
+--
+-- TODO: What about the other half?
+--
+--     ¬ (A × B) → (¬ A) ⊎ (¬ B)
+--
+-- The difficulty is producing a _constructive_ proof that A or B is
+-- empty, given that the product is empty. I.e., given (A × B) → ⊥, we
+-- need to produce one of A → ⊥ or B → ⊥. This doesn't seem possible
+-- in intuitionist logic (?)
 ```
 
 
@@ -410,6 +419,12 @@ pick the first disjunct:
 
 There are no holes left! This completes the proof.
 
+```
+-- working through the above interactively
+em-irrefutable′ : ∀ {A : Set} → ¬ ¬ (A ⊎ ¬ A)
+em-irrefutable′ k = k (inj₂ (λ x → k (inj₁ x)))
+```
+
 The following story illustrates the behaviour of the term we have created.
 (With apologies to Peter Selinger, who tells a similar story
 about a king, a wizard, and the Philosopher's stone.)
@@ -464,7 +479,33 @@ Consider the following principles:
 Show that each of these implies all the others.
 
 ```
--- Your code goes here
+em→dne : ∀ {A : Set}
+  → A ⊎ ¬ A
+  -----------
+  → ¬ ¬ A → A
+em→dne (inj₁  x) = λ ¬¬x → x
+em→dne (inj₂ ¬x) = λ ¬¬x → ⊥-elim (¬¬x ¬x)
+
+em→pl : ∀ {A B : Set}
+  → A ⊎ ¬ A
+  -------------------
+  → ((A → B) → A) → A
+em→pl (inj₁  x) = λ _ → x
+em→pl (inj₂ ¬x) = λ f → {!!}
+
+em→iad : ∀ {A B : Set}
+  → A ⊎ ¬ A
+  -------------------
+  → (A → B) → ¬ A ⊎ B
+em→iad (inj₁  x) = λ f → inj₂ (f x)
+em→iad (inj₂ ¬x) = {!!}
+
+em→dm : ∀ {A B : Set}
+  → A ⊎ ¬ A
+  -----------------------
+  → ¬ (¬ A × ¬ B) → A ⊎ B
+em→dm (inj₁  x) = λ _ → inj₁ x
+em→dm (inj₂ ¬x) = λ f → {!!}
 ```
 
 
