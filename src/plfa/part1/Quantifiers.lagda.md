@@ -92,9 +92,15 @@ dependent product is ambiguous.
 
 Show that universals distribute over conjunction:
 ```
-postulate
-  ∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+∀-distrib-× : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x × C x) ≃ (∀ (x : A) → B x) × (∀ (x : A) → C x)
+∀-distrib-× =
+  record
+  { to = λ f → ⟨ (λ x → proj₁ (f x)) , (λ x → proj₂ (f x)) ⟩
+  ; from = λ (⟨ f , g ⟩) x → ⟨ f x , g x ⟩
+  ; from∘to = λ _ → refl
+  ; to∘from = λ _ → refl
+  }
 ```
 Compare this with the result (`→-distrib-×`) in
 Chapter [Connectives]({{ site.baseurl }}/Connectives/).
@@ -103,12 +109,16 @@ Chapter [Connectives]({{ site.baseurl }}/Connectives/).
 
 Show that a disjunction of universals implies a universal of disjunctions:
 ```
-postulate
-  ⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
-    (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)  →  ∀ (x : A) → B x ⊎ C x
+⊎∀-implies-∀⊎ : ∀ {A : Set} {B C : A → Set} →
+  (∀ (x : A) → B x) ⊎ (∀ (x : A) → C x)  →  ∀ (x : A) → B x ⊎ C x
+⊎∀-implies-∀⊎ (inj₁ f) = λ x → inj₁ (f x)
+⊎∀-implies-∀⊎ (inj₂ g) = λ x → inj₂ (g x)
 ```
 Does the converse hold? If so, prove; if not, explain why.
 
+```
+-- TODO
+```
 
 #### Exercise `∀-×` (practice)
 
@@ -123,6 +133,23 @@ Let `B` be a type indexed by `Tri`, that is `B : Tri → Set`.
 Show that `∀ (x : Tri) → B x` is isomorphic to `B aa × B bb × B cc`.
 Hint: you will need to postulate a version of extensionality that
 works for dependent functions.
+
+```
+postulate
+  dependent-extensionality : ∀ { A B : Set }
+    → ∀ (f : A → B)
+    → ∀ (g : A → B)
+
+tri-iso : ∀ {B : Tri → Set}
+  → (∀ (x : Tri) → B x) ≃ B aa × B bb × B cc
+tri-iso =
+  record
+  { to = λ x → {!!}
+  ; from = {!!}
+  ; from∘to = {!!}
+  ; to∘from = {!!}
+  }
+```
 
 
 ## Existentials
